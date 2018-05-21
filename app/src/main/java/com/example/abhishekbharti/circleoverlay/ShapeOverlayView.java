@@ -17,25 +17,40 @@ import android.widget.LinearLayout;
  * Created by abhishekbharti on 21/05/18.
  */
 
-public class CircleOverlayView extends LinearLayout {
+public class ShapeOverlayView extends LinearLayout {
     private Bitmap bitmap;
     public int radius = 100;
     public float centerX = 100;
     public float centerY = 100;
     public int alpha = 120;
+    boolean isCircularOverlay = true;
+    int rectLeft, rectRight, rectTop, rectBottom;
 
-    public CircleOverlayView(Context context, int radius, float x, float y) {
+    //for circular shape
+    public ShapeOverlayView(Context context, int radius, float x, float y) {
         super(context);
         this.radius = radius;
         this.centerX = x;
         this.centerY = y;
+        this.isCircularOverlay = true;
     }
 
-    public CircleOverlayView(Context context, AttributeSet attrs) {
+    //for rounded rectangular shape
+    public ShapeOverlayView(Context context, int radius, int rectLeft, int rectRight, int rectTop, int rectBottom) {
+        super(context);
+        this.radius = radius;
+        this.rectLeft = rectLeft;
+        this.rectRight = rectRight;
+        this.rectTop = rectTop;
+        this.rectBottom = rectBottom;
+        this.isCircularOverlay = false;
+    }
+
+    public ShapeOverlayView(Context context, AttributeSet attrs) {
         super(context, attrs);
     }
 
-    public CircleOverlayView(Context context, AttributeSet attrs, int defStyleAttr) {
+    public ShapeOverlayView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
     }
 
@@ -53,7 +68,7 @@ public class CircleOverlayView extends LinearLayout {
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    public CircleOverlayView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+    public ShapeOverlayView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
     }
 
@@ -62,15 +77,18 @@ public class CircleOverlayView extends LinearLayout {
         super.dispatchDraw(canvas);
 
         if (bitmap == null) {
-            createWindowFrame();
+            if(isCircularOverlay){
+                createCircularWindowFrame();
+            } else {
+                createRoundedRectangularWindowFrame();
+            }
         }
         canvas.drawBitmap(bitmap, 0, 0, null);
     }
 
-    protected void createWindowFrame() {
+    protected void createCircularWindowFrame() {
         bitmap = Bitmap.createBitmap(getWidth(), getHeight(), Bitmap.Config.ARGB_8888);
         Canvas osCanvas = new Canvas(bitmap);
-
         RectF outerRectangle = new RectF(0, 0, getWidth(), getHeight());
 
         Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -81,6 +99,23 @@ public class CircleOverlayView extends LinearLayout {
         paint.setColor(Color.TRANSPARENT);
         paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_OUT));
         osCanvas.drawCircle(centerX, centerY, radius, paint);
+    }
+
+    protected void createRoundedRectangularWindowFrame() {
+        bitmap = Bitmap.createBitmap(getWidth(), getHeight(), Bitmap.Config.ARGB_8888);
+        Canvas osCanvas = new Canvas(bitmap);
+        RectF outerRectangle = new RectF(0, 0, getWidth(), getHeight());
+
+        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        paint.setColor(getResources().getColor(R.color.black));
+        paint.setAlpha(alpha);
+        osCanvas.drawRect(outerRectangle, paint);
+
+        paint.setColor(Color.TRANSPARENT);
+        paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_OUT));
+
+        RectF innerRectangle = new RectF(rectLeft, rectTop, rectRight, rectBottom);
+        osCanvas.drawRoundRect(innerRectangle, radius, radius, paint);
     }
 
     @Override
